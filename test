@@ -1,0 +1,260 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <windows.h>
+#include <conio.h>
+#include <math.h>
+
+#define MAX_NODES 6
+#define MAX_ARCS 9
+
+// Structure pour représenter un arc
+typedef struct {
+    int id;            // Identifiant de l'arc
+    int source;        // Sommet source
+    int destination;   // Sommet destination
+    float poids;       // Poids de l'arc
+} Arcs;
+
+// Structure pour représenter un réseau trophique
+typedef struct {
+    int id;
+    char nom[100];
+    char type[100];
+    double population;  // Population de l'espèce
+    double r;           // Taux de croissance
+    double K;           // Capacité de portage
+    double N;           // Population actuelle
+    double biomasse;    // Biomasse en kg
+    double flux_energie; // Flux énergétique en Watts
+    double flux_nutriments; // Flux de nutriments supplémentaire
+} Noeud;
+
+// Fonction pour afficher les informations d'un sommet
+void afficher_sommet(Noeud *noeud) {
+    printf("Sommet %d: %s (%s) - Population: %.2f\n", noeud->id, noeud->nom, noeud->type, noeud->N);
+}// Fonction pour afficher les arcs
+void afficher_arc(Arcs *arc) {
+    printf("Arc: %d -> %d avec poids %.2f\n", arc->source, arc->destination, arc->poids);
+}
+
+// Fonction pour afficher les successeurs et prédécesseurs d'un sommet
+void afficher_adjacence(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs) {
+    for (int i = 0; i < nombre_noeuds; i++) {
+        printf("\nSommet %d: %s\n", noeuds[i].id, noeuds[i].nom);
+        printf("Successeurs: ");
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].source == i) {
+                printf("%d ", arcs[j].destination);
+            }
+        }
+
+        printf("\nPrédécesseurs: ");
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].destination == i) {
+                printf("%d ", arcs[j].source);
+            }
+        }
+        printf("\n");
+    }
+}
+
+// Fonction pour afficher les espèces avec plusieurs prédateurs
+void afficher_especes_avec_multiple_predateurs(Arcs *arcs, int nombre_arcs, Noeud *noeuds, int nombre_noeuds) {
+    printf("\nEspèces avec plusieurs prédateurs :\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        int count = 0;
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].destination == i) {
+                count++;
+            }
+        }
+        if (count > 1) {
+            printf("%s\n", noeuds[i].nom);
+        }
+    }
+}
+
+// Fonction pour afficher les espèces avec plusieurs sources d'alimentation
+void afficher_especes_avec_multiple_sources(Arcs *arcs, int nombre_arcs, Noeud *noeuds, int nombre_noeuds) {
+    printf("\nEspèces avec plusieurs sources d'alimentation :\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        int count = 0;
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].source == i) {
+                count++;
+            }
+        }
+        if (count > 1) {
+            printf("%s\n", noeuds[i].nom);
+        }
+    }
+}
+
+// Fonction pour afficher les espèces les plus connectées
+void afficher_especes_plus_connectees(Arcs *arcs, int nombre_arcs, Noeud *noeuds, int nombre_noeuds) {
+    printf("\nEspèces les plus connectées :\n");
+    int *degres = (int *)malloc(nombre_noeuds * sizeof(int));
+    for (int i = 0; i < nombre_noeuds; i++) {
+        degres[i] = 0;
+    }
+
+    for (int i = 0; i < nombre_arcs; i++) {
+        degres[arcs[i].source]++;
+        degres[arcs[i].destination]++;
+    }
+
+    int max_degre = 0;
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (degres[i] > max_degre) {
+            max_degre = degres[i];
+        }
+    }
+
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (degres[i] == max_degre) {
+            printf("%s\n", noeuds[i].nom);
+        }
+    }
+
+    free(degres);
+}
+
+// Fonction pour afficher les espèces avec des prédateurs et des proies
+void afficher_especes_avec_predateurs_et_proies(Arcs *arcs, int nombre_arcs, Noeud *noeuds, int nombre_noeuds) {
+    printf("\nEspèces avec des prédateurs et des proies :\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        int a_predateur = 0, a_proie = 0;
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].destination == i) {
+                a_predateur = 1;
+            }
+            if (arcs[j].source == i) {
+                a_proie = 1;
+            }
+        }
+        if (a_predateur && a_proie) {
+            printf("%s\n", noeuds[i].nom);
+        }
+    }
+}
+
+// Fonction pour afficher les nœuds isolés
+void afficher_noeuds_isoles(Arcs *arcs, int nombre_arcs, Noeud *noeuds, int nombre_noeuds) {
+    printf("\nNoeuds isolés :");
+    int noeuds_isoles_count = 0;
+    for (int i = 0; i < nombre_noeuds; i++) {
+        int a_predateur = 0, a_proie = 0;
+        for (int j = 0; j < nombre_arcs; j++) {
+            if (arcs[j].destination == i) {
+                a_predateur = 1;
+            }
+            if (arcs[j].source == i) {
+                a_proie = 1;
+            }
+        }
+        if (!a_predateur && !a_proie) {
+            printf("%s\n", noeuds[i].nom);
+            noeuds_isoles_count++;
+        }
+    }
+    if (noeuds_isoles_count == 0) {
+        printf(" 0");
+    }
+}
+
+// Fonction pour calculer et afficher la complexité du réseau
+void afficher_complexite(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs) {
+    // 1. Nombre d'espèces
+    printf("\nNombre d'espèces : %d\n", nombre_noeuds);
+
+    // 2. Hauteur trophique
+    int niveaux[nombre_noeuds];
+    for (int i = 0; i < nombre_noeuds; i++) {
+        niveaux[i] = -1; // Initialisation
+    }
+    niveaux[0] = 0; // Les producteurs (ID 0) sont au niveau 0
+
+    // Calcul de la hauteur trophique
+    for (int i = 0; i < nombre_arcs; i++) {
+        int source = arcs[i].source;
+        int destination = arcs[i].destination;
+        if (niveaux[source] != -1) {
+            if (niveaux[destination] < niveaux[source] + 1) {
+                niveaux[destination] = niveaux[source] + 1;
+            }
+        }
+    }
+
+    int hauteur_trophique = 0;
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (niveaux[i] > hauteur_trophique) {
+            hauteur_trophique = niveaux[i];
+        }
+    }
+    printf("Hauteur trophique : %d niveaux\n", hauteur_trophique + 1);
+
+    // 3. Densité de liaison
+    float densite = (float)nombre_arcs / (nombre_noeuds * (nombre_noeuds - 1));
+    printf("Densité de liaison : %.2f\n\n", densite);
+
+    // 4. Distribution des degrés
+    int degres[nombre_noeuds];
+    for (int i = 0; i < nombre_noeuds; i++) {
+        degres[i] = 0;
+    }
+
+    for (int i = 0; i < nombre_arcs; i++) {
+        degres[arcs[i].source]++;
+        degres[arcs[i].destination]++;
+    }
+
+    printf("Distribution des degrés :\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        printf("Sommet %d : Degré %d\n", i, degres[i]);
+    }
+}
+
+// Fonction DFS pour la vérification de la connexité
+void dfs(int sommet, int *visited, int adj[MAX_NODES][MAX_NODES], int nombre_noeuds) {
+    visited[sommet] = 1;
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (adj[sommet][i] && !visited[i]) {
+            dfs(i, visited, adj, nombre_noeuds);
+        }
+    }
+}
+
+// Fonction pour vérifier la connexité faible
+int verifier_connexite_faible(Arcs *arcs, int nombre_arcs, int nombre_noeuds) {
+    // Matrice d'adjacence non dirigée
+    int adj[MAX_NODES][MAX_NODES] = {0};
+
+    // Remplissage de la matrice d'adjacence
+    for (int i = 0; i < nombre_arcs; i++) {
+        adj[arcs[i].source][arcs[i].destination] = 1;
+        adj[arcs[i].destination][arcs[i].source] = 1; // Ignorer la direction
+    }
+
+    // Tableau pour marquer les sommets visités
+    int visited[MAX_NODES] = {0};
+
+    // Lancer DFS depuis le sommet 0
+    dfs(0, visited, adj, nombre_noeuds);
+
+    // Vérifier si tous les sommets ont été visités
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (!visited[i]) {
+            return 0; // Le graphe n'est pas connexe
+        }
+    }
+    return 1; // Le graphe est connexe
+}
+
+// Charger le réseau et initialiser noeud_count et arc_count
+void charger_et_afficher_reseau(const char *nom_fichier, Noeud *noeuds, Arcs *arcs, int *noeud_count, int *arc_count) {
+    FILE *fichier = fopen(nom_fichier, "r");
+    if (!fichier) {
+        printf("Erreur lors de l'ouverture du fichier %s\n", nom_fichier);
+        return;
+    }
