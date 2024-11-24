@@ -1517,4 +1517,286 @@ int main() {
 
     return 0;
 }
+  // 3. Densité de liaison
+    float densite = (float)nombre_arcs / (nombre_noeuds * (nombre_noeuds - 1));
+    printf("Densité de liaison : %.2f\n\n", densite);
+
+    // 4. Distribution des degrés
+    int degres[nombre_noeuds];
+    for (int i = 0; i < nombre_noeuds; i++) {
+        degres[i] = 0;
+    }
+
+    for (int i = 0; i < nombre_arcs; i++) {
+        degres[arcs[i].source]++;
+        degres[arcs[i].destination]++;
+    }
+
+    printf("Distribution des degrés :\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        printf("Sommet %d : Degré %d\n", i, degres[i]);
+    }
+}
+
+// Fonction DFS pour la vérification de la connexité
+void dfs(int sommet, int *visited, int adj[MAX_NODES][MAX_NODES], int nombre_noeuds) {
+    visited[sommet] = 1;
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (adj[sommet][i] && !visited[i]) {
+            dfs(i, visited, adj, nombre_noeuds);
+        }
+    }
+}
+
+// Fonction pour vérifier la connexité faible
+int verifier_connexite_faible(Arcs *arcs, int nombre_arcs, int nombre_noeuds) {
+    // Matrice d'adjacence non dirigée
+    int adj[MAX_NODES][MAX_NODES] = {0};
+
+    // Remplissage de la matrice d'adjacence
+    for (int i = 0; i < nombre_arcs; i++) {
+        adj[arcs[i].source][arcs[i].destination] = 1;
+        adj[arcs[i].destination][arcs[i].source] = 1; // Ignorer la direction
+    }
+
+    // Tableau pour marquer les sommets visités
+    int visited[MAX_NODES] = {0};
+
+    // Lancer DFS depuis le sommet 0
+    dfs(0, visited, adj, nombre_noeuds);
+
+    // Vérifier si tous les sommets ont été visités
+    for (int i = 0; i < nombre_noeuds; i++) {
+        if (!visited[i]) {
+            return 0; // Le graphe n'est pas connexe
+        }
+    }
+    return 1; // Le graphe est connexe
+}
+
+// Charger le réseau et initialiser noeud_count et arc_count
+void charger_et_afficher_reseau(const char *nom_fichier, Noeud *noeuds, Arcs *arcs, int *noeud_count, int *arc_count) {
+    FILE *fichier = fopen(nom_fichier, "r");
+    if (!fichier) {
+        printf("Erreur lors de l'ouverture du fichier %s\n", nom_fichier);
+        return;
+    }
+
+    char ligne[256];
+    while (fgets(ligne, sizeof(ligne), fichier)) {
+        if (strncmp(ligne, "# Nœuds", 7) == 0) {
+            while (fgets(ligne, sizeof(ligne), fichier) && ligne[0] != '#') {
+                if (sscanf(ligne, "%d %s %s %lf %lf %lf", &noeuds[*noeud_count].id, noeuds[*noeud_count].nom, noeuds[*noeud_count].type, &noeuds[*noeud_count].r, &noeuds[*noeud_count].K, &noeuds[*noeud_count].N) == 6) {
+                    (*noeud_count)++;
+                }
+            }
+        }
+        if (strncmp(ligne, "# Arcs", 6) == 0) {
+            while (fgets(ligne, sizeof(ligne), fichier) && ligne[0] != '#') {
+                if (sscanf(ligne, "%d %d %d %f", &arcs[*arc_count].id, &arcs[*arc_count].source, &arcs[*arc_count].destination, &arcs[*arc_count].poids) == 4) {
+                    (*arc_count)++;
+                }
+            }
+        }
+    }
+
+    fclose(fichier);
+
+    // Affichage des informations
+    printf("\n=== Affichage des sommets et arcs ===\n");
+    for (int i = 0; i < *noeud_count; i++) {
+        afficher_sommet(&noeuds[i]);
+    }
+
+    printf("\n=== Affichage des arcs ===\n");
+    for (int i = 0; i < *arc_count; i++) {
+        afficher_arc(&arcs[i]);
+    }
+
+    printf("\n=== Affichage des successeurs et prédécesseurs ===");
+    afficher_adjacence(noeuds, arcs, *noeud_count, *arc_count);
+}
+void afficher_niveaux_trophiques(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs, int espece_id) {
+    int niveaux[MAX_NODES];
+    for (int i = 0; i < nombre_noeuds; i++) {
+        niveaux[i] = -1; // Initialisation
+    }
+    niveaux[0] = 0; // Producteur primaire au niveau 0
+
+    for (int i = 0; i < nombre_arcs; i++) {
+        int source = arcs[i].source;
+        int destination = arcs[i].destination;
+        if (niveaux[source] != -1 && niveaux[destination] < niveaux[source] + 1) {
+            niveaux[destination] = niveaux[source] + 1;
+        }
+    }
+
+    if (niveaux[espece_id] != -1) {
+        printf("\nNiveau trophique de %s : %d\n", noeuds[espece_id].nom, niveaux[espece_id]);
+    } else {
+        printf("\nNiveau trophique non calculable pour %s.\n", noeuds[espece_id].nom);
+    }
+}
+
+void afficher_graphe_ascendants_recursif(Noeud *noeuds, Arcs *arcs, int nombre_arcs, int espece_id, int niveau) {
+    int found = 0;
+    for (int i = 0; i < nombre_arcs; i++) {
+        if (arcs[i].destination == espece_id) {
+            found = 1;
+            for (int j = 0; j < niveau; j++) {
+                printf("  "); // Indentation pour montrer le niveau
+            }
+            printf("%s <- %s\n", noeuds[espece_id].nom, noeuds[arcs[i].source].nom);
+            afficher_graphe_ascendants_recursif(noeuds, arcs, nombre_arcs, arcs[i].source, niveau + 1);
+        }
+    }
+
+    if (!found && niveau == 0) {
+        printf("Aucune chaîne alimentaire trouvée pour %s.\n", noeuds[espece_id].nom);
+    }
+}
+
+void afficher_graphe_ascendants(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs, int espece_id) {
+    printf("\nChaînes alimentaires complètes dont dépend %s :\n", noeuds[espece_id].nom);
+    afficher_graphe_ascendants_recursif(noeuds, arcs, nombre_arcs, espece_id, 0);
+}
+
+// Fonction pour calculer les degrés (entrée et sortie)
+void calculer_degres(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs) {
+    int in_degree[MAX_NODES] = {0};
+    int out_degree[MAX_NODES] = {0};
+
+    for (int i = 0; i < nombre_arcs; i++) {
+        out_degree[arcs[i].source]++;
+        in_degree[arcs[i].destination]++;
+    }
+
+    printf("\n=== Degrés des espèces ===\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        printf("%s: in-degree = %d, out-degree = %d\n", noeuds[i].nom, in_degree[i], out_degree[i]);
+    }
+}
+
+// Fonction pour calculer la centralité d'intermédiarité
+void calculer_centralite_intermediarite(Noeud *noeuds, Arcs *arcs, int nombre_noeuds, int nombre_arcs) {
+    float centralite[MAX_NODES] = {0};
+    int adj[MAX_NODES][MAX_NODES] = {0};
+
+    // Construire la matrice d'adjacence
+    for (int i = 0; i < nombre_arcs; i++) {
+        adj[arcs[i].source][arcs[i].destination] = 1;
+    }
+
+    // Calcul de la centralité d'intermédiarité (simplifiée)
+    for (int k = 0; k < nombre_noeuds; k++) {
+        for (int i = 0; i < nombre_noeuds; i++) {
+            for (int j = 0; j < nombre_noeuds; j++) {
+                if (i != j && i != k && j != k && adj[i][k] && adj[k][j]) {
+                    centralite[k]++;
+                }
+            }
+        }
+    }
+
+    printf("\n=== Centralité d'intermédiarité ===\n");
+    for (int i = 0; i < nombre_noeuds; i++) {
+        printf("%s: centralité = %.2f\n", noeuds[i].nom, centralite[i]);
+    }
+}
+
+// Fonction pour simuler la disparition d'une espèce
+void simuler_disparition(Noeud *noeuds, Arcs *arcs, int *nombre_arcs, int espece_id) {
+    printf("\n=== Simulation de la disparition de %s ===\n", noeuds[espece_id].nom);
+
+    // Afficher les arcs liés à l'espèce disparue
+    printf("\nArcs liés à %s avant la disparition :\n", noeuds[espece_id].nom);
+    for (int i = 0; i < *nombre_arcs; i++) {
+        if (arcs[i].source == espece_id || arcs[i].destination == espece_id) {
+            afficher_arc(&arcs[i]);
+        }
+    }
+
+    // Suppression des arcs liés à l'espèce disparue
+    int nouveaux_arcs[MAX_ARCS];
+    int compteur = 0;
+    for (int i = 0; i < *nombre_arcs; i++) {
+        if (arcs[i].source != espece_id && arcs[i].destination != espece_id) {
+            arcs[compteur++] = arcs[i]; // Garder l'arc
+        }
+    }
+    *nombre_arcs = compteur; // Mettre à jour le nombre d'arcs après suppression
+
+    // Afficher les arcs restants après suppression
+    printf("\nArcs après la disparition de %s :\n", noeuds[espece_id].nom);
+    for (int i = 0; i < *nombre_arcs; i++) {
+        afficher_arc(&arcs[i]);
+    }
+}
+
+// Function to get the terminal width on Windows
+int get_terminal_width() {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int columns;
+
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+
+    return columns;
+}
+
+// Function to get the terminal height on Windows
+int get_terminal_height() {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int rows;
+
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+    return rows;
+}
+
+// Function to center and print text
+void print_centered(const char *text) {
+    int terminal_width = get_terminal_width();
+    int text_length = strlen(text);
+    int padding = (terminal_width - text_length) / 2;
+
+    for (int i = 0; i < padding; i++) {
+        printf(" ");
+    }
+    printf("%s\n", text);
+}
+
+// Function to center and print text exactly in the middle of the console
+void text_centered(const char *text) {
+    int terminal_width = get_terminal_width();
+    int terminal_height = get_terminal_height();
+    int text_length = strlen(text);
+    int padding_left = (terminal_width - text_length) / 2;
+    int padding_top = terminal_height / 2;
+
+    // Move the cursor to the middle of the console
+    COORD coord;
+    coord.X = padding_left;
+    coord.Y = padding_top;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+
+    // Print the centered text
+    printf("%s\n", text);
+}
+
+// Function to center the cursor on the screen
+void center_cursor() {
+    int terminal_width = get_terminal_width();
+    int terminal_height = get_terminal_height();
+    COORD coord;
+    coord.X = terminal_width / 2 - 7;
+    coord.Y = (terminal_height / 2) + 5; // Move down by 5 lines
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void afficher_loading(const char *message) {
+    system("cls"); // Clear the screen
+    text_centered(message)
+
 
