@@ -1,0 +1,18 @@
+# Nœuds : ID Nom Type r K N
+0 Plante Producteur 0.1 5000 2000    # Capacité de portage pour les plantes
+1 Lapin Consommateur_primaire 0.4 1000  200  # Lapins consomment des plantes
+2 Cerf Consommateur_primaire 0.2 800  50   # Cerfs consomment des plantes
+3 Renard Consommateur_secondaire 0.07 300  20   # Renards consomment des lapins et cerfs
+4 Loup Consommateur_secondaire 0.05 150  10   # Loups consomment des cerfs et renards
+5 Décomposeur Décomposeur 0.3 1000  100  # Décomposeurs recyclent la matière organique
+
+# Arcs : ID Source Destination Poids
+0 0 1 1.0  # Plante -> Lapin (Plante nourrit Lapin)
+1 0 2 0.8  # Plante -> Cerf (Plante nourrit Cerf)
+2 1 3 0.6  # Lapin -> Renard (Lapin nourrit Renard)
+3 2 4 0.7  # Cerf -> Loup (Cerf nourrit Loup)
+4 3 4 0.5  # Renard -> Loup (Renard nourrit Loup)
+5 1 5 0.9  # Lapin -> Décomposeur (Lapin nourrit Décomposeur)
+6 2 5 0.7  # Cerf -> Décomposeur (Cerf nourrit Décomposeur)
+7 3 5 0.4  # Renard -> Décomposeur (Renard nourrit Décomposeur)
+8 4 5 0.3  # Loup -> Décomposeur (Loup nourrit Décomposeur)

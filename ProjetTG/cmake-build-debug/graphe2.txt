@@ -1,0 +1,16 @@
+# Nœuds : ID Nom Type r K N
+0 Phytoplancton Producteur 0.5 500 2000   # Phytoplancton produit de la biomasse pour les zooplanctons
+1 Zooplancton Consommateur_primaire 0.4 300  200  # Zooplanctons consomment du phytoplancton
+2 Poisson_petit Consommateur_primaire 0.3 120  50   # Petits poissons consomment du zooplancton
+3 Poisson_grand Consommateur_secondaire 0.1 60   20   # Grands poissons consomment des petits poissons
+4 Requin Consommateur_tertiaire 0.1 20   10   # Requins consomment des grands poissons
+5 Décomposeur Décomposeur 0.3 100 100   # Décomposeurs recyclent la biomasse des poissons
+
+# Arcs : ID Source Destination Poids
+0 0 1 1.0  # Phytoplancton -> Zooplancton (Phytoplancton nourrit Zooplancton)
+1 1 2 0.8  # Zooplancton -> Poisson_petit (Zooplancton nourrit Poisson_petit)
+2 2 3 0.7  # Poisson_petit -> Poisson_grand (Poisson_petit nourrit Poisson_grand)
+3 3 4 0.6  # Poisson_grand -> Requin (Poisson_grand nourrit Requin)
+4 2 5 0.5  # Poisson_petit -> Décomposeur (Poisson_petit nourrit Décomposeur)
+5 3 5 0.4  # Poisson_grand -> Décomposeur (Poisson_grand nourrit Décomposeur)
+6 4 5 0.3  # Requin -> Décomposeur (Requin nourrit Décomposeur)

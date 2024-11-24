@@ -1,0 +1,21 @@
+digraph G {
+    graph [splines=true, nodesep=1, ranksep=2, bgcolor=lightyellow];
+    node [shape=ellipse, style=filled, color=lightblue, fontname="Arial", fontsize=12];
+    edge [color=gray, fontname="Arial", fontsize=10];
+    info [label="Écosystème : Océan Arctique\nRégion : Arctique\nClimat : Polaire\nInteractions : Phytoplancton, zooplancton, poissons, mammifères marins, et décomposeurs", shape=box, style=filled, color=lightgrey, fontname="Arial", fontsize=12];
+
+    0 [label="Phytoplancton (Producteur)\nr = 0.5\nK = 500\nN = 2000"];
+    1 [label="Zooplancton (Consommateur_primaire)\nr = 0.4\nK = 300\nN = 200"];
+    2 [label="Poisson_petit (Consommateur_primaire)\nr = 0.3\nK = 120\nN = 50"];
+    3 [label="Poisson_grand (Consommateur_secondaire)\nr = 0.2\nK = 60\nN = 20"];
+    4 [label="Requin (Consommateur_tertiaire)\nr = 0.1\nK = 20\nN = 10"];
+    5 [label="Décomposeur (Décomposeur)\nr = 0.3\nK = 100\nN = 100"];
+
+    0 -> 1 [label="1.0"];
+    1 -> 2 [label="0.8"];
+    2 -> 3 [label="0.7"];
+    3 -> 4 [label="0.6"];
+    2 -> 5 [label="0.5"];
+    3 -> 5 [label="0.4"];
+    4 -> 5 [label="0.3"];
+}

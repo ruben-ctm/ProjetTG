@@ -1,0 +1,18 @@
+# Nœuds : ID Nom Type r K N
+0 Arbre Producteur 0.4 300 2000  # Arbres produisent des feuilles pour les insectes
+1 Insecte Consommateur_primaire 0.5 250 200  # Insectes consomment des feuilles d'arbres
+2 Oiseau Consommateur_secondaire 0.3 120  50   # Oiseaux consomment des insectes
+3 Serpent Consommateur_secondaire 0.17 80   20   # Serpents consomment des insectes
+4 Rapace Consommateur_tertiaire 0.1 30   10   # Rapaces consomment des oiseaux et serpents
+5 Décomposeur Décomposeur 0.4 150 100  # Décomposeurs recyclent les restes des animaux et des plantes
+
+# Arcs : ID Source Destination Poids
+0 0 1 1.0  # Arbre -> Insecte (Arbre nourrit Insecte)
+1 1 2 0.6  # Insecte -> Oiseau (Insecte nourrit Oiseau)
+2 1 3 0.4  # Insecte -> Serpent (Insecte nourrit Serpent)
+3 2 4 0.7  # Oiseau -> Rapace (Oiseau nourrit Rapace)
+4 3 4 0.5  # Serpent -> Rapace (Serpent nourrit Rapace)
+5 1 5 0.8  # Insecte -> Décomposeur (Insecte nourrit Décomposeur)
+6 2 5 0.3  # Oiseau -> Décomposeur (Oiseau nourrit Décomposeur)
+7 3 5 0.2  # Serpent -> Décomposeur (Serpent nourrit Décomposeur)
+8 4 5 0.1  # Rapace -> Décomposeur (Rapace nourrit Décomposeur)
